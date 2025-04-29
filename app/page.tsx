@@ -7,6 +7,7 @@ import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
+import Skills from "@/components/Skills";
 
 export default function Page() {
   const [showTopBtn, setShowTopBtn] = useState(false);
@@ -24,6 +25,7 @@ export default function Page() {
       <Navbar />
       <section id="home" className="min-h-screen pt-24 max-w-screen-xl mx-auto"><HomeSection /></section> {/* Added padding-top to avoid overlap */}
       <section id="about" className="min-h-screen pt-20"><AboutSection /></section>
+      <section id="skills" className="min-h-screen pt-20"><Skills /></section>
       <section id="projects" className="min-h-screen pt-20"><ProjectsSection /></section>
       <section id="contact" className="min-h-screen pt-20"><ContactSection /></section>
       <Footer />
