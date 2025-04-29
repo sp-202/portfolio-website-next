@@ -1,14 +1,14 @@
 import { Octokit } from '@octokit/rest';
 import { NextRequest, NextResponse } from 'next/server';
 
-const username = 'sp-202';  // Replace with your GitHub username
+const username = 'sp-202'; // Replace with your GitHub username
 const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN as string;
 
 const octokit = new Octokit({ auth: token });
 
 // Simple in-memory cache with a TTL of 10 minutes (600,000ms)
 const cache: Record<string, { data: any; timestamp: number }> = {};
-const CACHE_TTL = 600000; // Cache for 10 minutes
+const CACHE_TTL = 0; // Cache for 10 minutes
 
 // Function to check cache and return data if available and not expired
 const getCache = (key: string) => {
@@ -26,7 +26,7 @@ const setCache = (key: string, data: any) => {
 
 export async function GET(req: NextRequest) {
   const cacheKey = `githubStats_${username}`;
-  
+
   // Check if the data is already in cache
   const cachedData = getCache(cacheKey);
   if (cachedData) {
@@ -49,54 +49,65 @@ export async function GET(req: NextRequest) {
 
     // Parallelize fetching contributors and languages for all repos
     const fetchRepoDataPromises = repos.map(async (repo) => {
-      // Fetch contributors and languages for each repo in parallel
-      const [contributorsRes, languagesRes] = await Promise.all([
-        octokit.rest.repos.listContributors({
-          owner: username,
-          repo: repo.name,
-        }),
-        octokit.request('GET /repos/{owner}/{repo}/languages', {
-          owner: username,
-          repo: repo.name,
-        }),
-      ]);
+      try {
+        // Fetch contributors and languages for each repo in parallel
+        const [contributorsRes, languagesRes] = await Promise.all([
+          octokit.rest.repos
+            .listContributors({
+              owner: username,
+              repo: repo.name,
+            })
+            .catch((error: any) => {
+              if (error.status === 403 && error.message.includes('contributor list is too large')) {
+                console.warn(
+                  `Skipping contributors for repo ${repo.name}: ${error.message}`
+                );
+                return { data: [] }; // Return empty contributors list to continue processing
+              }
+              throw error; // Rethrow other errors
+            }),
+          octokit.request('GET /repos/{owner}/{repo}/languages', {
+            owner: username,
+            repo: repo.name,
+          }),
+        ]);
 
-      const contributors = contributorsRes.data;
-      const self = Array.isArray(contributors)
-        ? contributors.find((c) => c.login === username)
-        : null;
+        const contributors = contributorsRes.data;
+        const self = Array.isArray(contributors)
+          ? contributors.find((c) => c.login === username)
+          : null;
 
-      if (self) totalCommits += self.contributions;
-
-      const languages = languagesRes.data;
-
-      // Accumulate language-specific data
-      for (const [language, lines] of Object.entries(languages)) {
-        if (languageStats[language]) {
-          languageStats[language] += lines;
+        if (self) {
+          totalCommits += self.contributions;
         } else {
-          languageStats[language] = lines;
+          console.warn(`No contributions found for ${username} in repo ${repo.name}`);
         }
+
+        const languages = languagesRes.data;
+
+        // Accumulate language-specific data
+        for (const [language, lines] of Object.entries(languages)) {
+          if (languageStats[language]) {
+            languageStats[language] += lines;
+          } else {
+            languageStats[language] = lines;
+          }
+        }
+      } catch (error: any) {
+        console.error(`Error processing repo ${repo.name}: ${error.message}`);
+        // Continue processing other repos instead of failing
       }
     });
 
     // Wait for all promises to resolve
     await Promise.all(fetchRepoDataPromises);
 
-    // Filter out only popular languages (e.g., C++, JavaScript, Python, Java)
-    const popularLanguages = ['C++', 'JavaScript', 'Python', 'Java', 'Ruby', 'TypeScript', 'Go'];
-    const filteredLanguageStats = Object.fromEntries(
-      Object.entries(languageStats).filter(([language]) =>
-        popularLanguages.includes(language)
-      )
-    );
-
     // Prepare response data
     const responseData = {
       publicRepos: user.public_repos,
       totalCommits,
       followers: user.followers,
-      languages: filteredLanguageStats,
+      languages: languageStats, // Include all languages without filtering
     };
 
     // Cache the response data
