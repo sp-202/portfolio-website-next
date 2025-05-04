@@ -1,17 +1,25 @@
 import { Octokit } from '@octokit/rest';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const username = 'sp-202'; // Replace with your GitHub username
 const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN as string;
 
 const octokit = new Octokit({ auth: token });
 
+// Define the shape of the cache data
+interface CacheData {
+  publicRepos: number;
+  totalCommits: number;
+  followers: number;
+  languages: Record<string, number>;
+}
+
 // Simple in-memory cache with a TTL of 10 minutes (600,000ms)
-const cache: Record<string, { data: any; timestamp: number }> = {};
+const cache: Record<string, { data: CacheData; timestamp: number }> = {};
 const CACHE_TTL = 0; // Cache for 10 minutes
 
 // Function to check cache and return data if available and not expired
-const getCache = (key: string) => {
+const getCache = (key: string): CacheData | null => {
   const cached = cache[key];
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.data;
@@ -20,11 +28,21 @@ const getCache = (key: string) => {
 };
 
 // Function to set cache with the current timestamp
-const setCache = (key: string, data: any) => {
+const setCache = (key: string, data: CacheData): void => {
   cache[key] = { data, timestamp: Date.now() };
 };
 
-export async function GET(req: NextRequest) {
+// Define types for contributor and language data
+interface Contributor {
+  login: string;
+  contributions: number;
+}
+
+interface Languages {
+  [key: string]: number;
+}
+
+export async function GET() {
   const cacheKey = `githubStats_${username}`;
 
   // Check if the data is already in cache
@@ -45,7 +63,7 @@ export async function GET(req: NextRequest) {
     });
 
     let totalCommits = 0;
-    let languageStats: Record<string, number> = {};
+    const languageStats: Record<string, number> = {};
 
     // Parallelize fetching contributors and languages for all repos
     const fetchRepoDataPromises = repos.map(async (repo) => {
@@ -57,8 +75,8 @@ export async function GET(req: NextRequest) {
               owner: username,
               repo: repo.name,
             })
-            .catch((error: any) => {
-              if (error.status === 403 && error.message.includes('contributor list is too large')) {
+            .catch((error: unknown) => {
+              if (error instanceof Error && error.message.includes('contributor list is too large')) {
                 console.warn(
                   `Skipping contributors for repo ${repo.name}: ${error.message}`
                 );
@@ -72,7 +90,7 @@ export async function GET(req: NextRequest) {
           }),
         ]);
 
-        const contributors = contributorsRes.data;
+        const contributors = contributorsRes.data as Contributor[];
         const self = Array.isArray(contributors)
           ? contributors.find((c) => c.login === username)
           : null;
@@ -83,7 +101,7 @@ export async function GET(req: NextRequest) {
           console.warn(`No contributions found for ${username} in repo ${repo.name}`);
         }
 
-        const languages = languagesRes.data;
+        const languages = languagesRes.data as Languages;
 
         // Accumulate language-specific data
         for (const [language, lines] of Object.entries(languages)) {
@@ -93,8 +111,12 @@ export async function GET(req: NextRequest) {
             languageStats[language] = lines;
           }
         }
-      } catch (error: any) {
-        console.error(`Error processing repo ${repo.name}: ${error.message}`);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          console.error(`Error processing repo ${repo.name}: ${error.message}`);
+        } else {
+          console.error(`Error processing repo ${repo.name}: Unknown error`);
+        }
         // Continue processing other repos instead of failing
       }
     });
@@ -103,7 +125,7 @@ export async function GET(req: NextRequest) {
     await Promise.all(fetchRepoDataPromises);
 
     // Prepare response data
-    const responseData = {
+    const responseData: CacheData = {
       publicRepos: user.public_repos,
       totalCommits,
       followers: user.followers,
@@ -115,8 +137,12 @@ export async function GET(req: NextRequest) {
 
     // Return the response data
     return NextResponse.json(responseData);
-  } catch (error: any) {
-    console.error('GitHub API error:', error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('GitHub API error:', error.message);
+      return NextResponse.json({ error: 'Failed to fetch GitHub data' }, { status: 500 });
+    }
+    console.error('GitHub API error: Unknown error');
     return NextResponse.json({ error: 'Failed to fetch GitHub data' }, { status: 500 });
   }
 }
