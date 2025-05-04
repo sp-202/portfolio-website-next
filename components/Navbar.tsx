@@ -1,14 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import { FiSun, FiMoon, FiMenu, FiX } from 'react-icons/fi';
+import { FiMenu, FiX } from 'react-icons/fi';
 
 const sections = ['home', 'about', 'skills', 'projects', 'contact'];
 
 const Navbar = () => {
-  const { theme, setTheme } = useTheme();
+  // useTheme();
   const [mounted, setMounted] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,13 +18,9 @@ const Navbar = () => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
 
-      // Map sections to their offsets and heights
       const sectionData = sections.map((id) => {
         const section = document.getElementById(id);
-        if (!section) {
-          console.warn(`Section #${id} not found in DOM`);
-          return { id, offset: Infinity, height: 0 };
-        }
+        if (!section) return { id, offset: Infinity, height: 0 };
         return {
           id,
           offset: section.offsetTop,
@@ -33,47 +28,37 @@ const Navbar = () => {
         };
       });
 
-      // Debug: Log section offsets and scroll position
-      console.debug('ScrollY:', scrollY, 'Section Data:', sectionData);
-
-      // Find the current section based on scroll position
       const current = sectionData.reduce((prev, curr) => {
-        // Consider a section active if scrollY is within its bounds (with a 100px offset)
         if (
-          scrollY >= curr.offset - 100 &&
-          scrollY < curr.offset + curr.height - 100
+          scrollY >= curr.offset - 50 &&
+          scrollY < curr.offset + curr.height - 50
         ) {
           return curr;
         }
-        // Keep the previous section if no match (helps with gaps)
         return prev.offset <= curr.offset ? prev : curr;
       }, sectionData[0]);
 
       if (current.id !== activeSection) {
-        console.debug('Active Section Changed:', current.id);
         setActiveSection(current.id);
       }
     };
 
-    // Run initially and on scroll
-    handleScroll();
+    handleScroll(); // initial run
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    // Re-run scroll detection on resize (in case section offsets change)
     window.addEventListener('resize', handleScroll, { passive: true });
+    window.addEventListener('hashchange', handleScroll); // ✅ detect hash jumps
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('hashchange', handleScroll); // ✅ cleanup
     };
   }, [activeSection]);
 
-  // Debug: Log menu state changes
   useEffect(() => {
     console.debug('Mobile Menu State:', isMenuOpen ? 'Open' : 'Closed');
   }, [isMenuOpen]);
 
-  // Close mobile menu when a link is clicked
   const handleLinkClick = () => {
     setIsMenuOpen(false);
   };
@@ -84,7 +69,8 @@ const Navbar = () => {
     <nav
       className="fixed top-0 left-0 w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg transition z-50"
       style={{
-        backgroundImage: 'linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+        backgroundImage:
+          'linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
         borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
       }}
     >
@@ -92,7 +78,7 @@ const Navbar = () => {
         {/* Logo */}
         <h1 className="text-4xl font-semibold">Subhodeep</h1>
 
-        {/* Hamburger Menu Button (Mobile) */}
+        {/* Mobile menu button */}
         <button
           className="md:hidden text-2xl focus:outline-none"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -117,7 +103,7 @@ const Navbar = () => {
               </Link>
             </li>
           ))}
-          <li>
+          {/* <li>
             <button
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
               className="p-2 rounded bg-gray-200/80 dark:bg-gray-700/80 hover:bg-gray-300 dark:hover:bg-gray-600 text-xl transition"
@@ -125,17 +111,18 @@ const Navbar = () => {
             >
               {theme === 'light' ? <FiMoon /> : <FiSun />}
             </button>
-          </li>
+          </li> */}
         </ul>
       </div>
 
-      {/* Mobile Navigation (Dropdown) */}
+      {/* Mobile Navigation Dropdown */}
       <div
         className={`md:hidden w-full absolute left-0 top-16 transition-opacity duration-300 ${
           isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
         } bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg rounded-b-lg`}
         style={{
-          backgroundImage: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
+          backgroundImage:
+            'linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
           border: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
@@ -155,7 +142,7 @@ const Navbar = () => {
               </Link>
             </li>
           ))}
-          <li className="py-2">
+          {/* <li className="py-2">
             <button
               onClick={() => {
                 setTheme(theme === 'light' ? 'dark' : 'light');
@@ -166,7 +153,7 @@ const Navbar = () => {
             >
               {theme === 'light' ? <FiMoon /> : <FiSun />}
             </button>
-          </li>
+          </li> */}
         </ul>
       </div>
     </nav>
