@@ -1,30 +1,88 @@
-import React from 'react'
+'use client';
 
-const AboutSection = () => {
+import Image from 'next/image';
+import Link from 'next/link';
+import { useGithubStats } from '@/context/GithubStatsContext';
+import CountUp from 'react-countup';
+
+const StatCard = ({
+  label,
+  value,
+  loading,
+}: {
+  label: string;
+  value: number;
+  loading: boolean;
+}) => {
   return (
-    <div className="p-6 max-w-screen-xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center">About Me</h2>
-      <div className="bg-gray-100 dark:bg-gray-800 p-8 rounded-lg shadow-md">
-        <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">
-          Hi, I&apos;m Subhodeep, a passionate software developer with a strong interest in systems programming, web development, and open-source contributions.
+    <div>
+      {loading ? (
+        <div className="h-8 w-16 bg-gray-300 dark:bg-gray-700 rounded-md mx-auto animate-pulse mb-1" />
+      ) : (
+        <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+          <CountUp start={0} end={value} duration={2.5} separator="," suffix="+" />
         </p>
-        <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">
-          My journey in tech began with exploring low-level programming in C++ and Java, and over time, I&apos;ve expanded my expertise to include modern languages like TypeScript and Python. I enjoy building efficient, scalable solutions and contributing to projects that make a difference.
-        </p>
-        <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">
-          When I&apos;m not coding, you can find me experimenting with new technologies, reading about computer science advancements, or collaborating with the open-source community. I&apos;m always eager to learn and take on new challenges!
-        </p>
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Background</h3>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-            <li>Bachelor&apos;s in Computer Science (or relevant field)</li>
-            <li>Contributed to multiple open-source projects on GitHub</li>
-            <li>Experienced in full-stack development and system-level programming</li>
-          </ul>
+      )}
+      <p className="text-gray-600 dark:text-gray-300 text-sm">{label}</p>
+    </div>
+  );
+};
+
+
+const AboutMe = () => {
+  const { githubStats, loading } = useGithubStats();
+  const { totalCommits, publicRepos } = githubStats;
+
+  return (
+    <section id="about" className="py-16 px-6 md:px-20 bg-white dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-4xl font-bold text-center mb-2">About Me</h2>
+        <p className="text-center text-lg text-gray-600 dark:text-gray-300 mb-12">My introduction</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          {/* Left: Image */}
+          <div className="flex justify-center">
+            <div className="rounded-2xl bg-indigo-500 p-2">
+              <Image
+                src="/your-photo.png"
+                alt="Profile"
+                width={300}
+                height={300}
+                className="rounded-2xl object-cover"
+              />
+            </div>
+          </div>
+
+          {/* Right: Text + Stats + CV */}
+          <div>
+            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
+              I&apos;m <span className="font-semibold">Subhodeep Pal</span>, a Mechanical Engineering B.Tech graduate from NIT Durgapur.
+              Over the past year, I have been extensively working on projects based on <strong>React</strong> and <strong>Next.js</strong> using <strong>TypeScript</strong>.
+              I also have a strong knowledge of <strong>Spring Boot</strong> and backend development.
+              I believe in the power of open source and love contributing to the community. Currently, I&apos;m focused on enhancing my <strong>Data Structures and Algorithms</strong> skills.
+            </p>
+
+            {/* Stats with shimmer animation */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
+              <StatCard label="Years Experience" value={2} loading={loading} />
+              <StatCard label="Commits on GitHub" value={totalCommits} loading={loading} />
+              <StatCard label="Repositories" value={publicRepos} loading={loading} />
+              <StatCard label="Fullstack Projects" value={20} loading={loading} />
+            </div>
+
+            {/* Download CV */}
+            <Link
+              href="/subhodeep_pal_resume.pdf"
+              download
+              className="inline-block px-6 py-3 bg-indigo-500 text-slate-50 rounded-xl hover:bg-indigo-800 transition"
+            >
+              Download CV →
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
-  )
-}
+    </section>
+  );
+};
 
-export default AboutSection
+export default AboutMe;
