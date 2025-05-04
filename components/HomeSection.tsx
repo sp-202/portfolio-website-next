@@ -1,13 +1,13 @@
-// components/HomeSection.tsx
 import Image from "next/image";
 import { Typewriter } from "react-simple-typewriter";
+import Link from "next/link";
 
 const HomeSection = () => {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between px-8 md:px-20 py-16 min-h-screen">
+    <div className="flex flex-col md:flex-row items-center justify-between px-8 md:px-20 py-16">
       {/* Left Side */}
       <div className="text-left space-y-6">
-        <h1 className="text-5xl font-bold text-blue-600">Hi, I'm Subhodeep 👋</h1>
+        <h1 className="text-5xl font-bold text-blue-600">Hi, I&apos;m Subhodeep 👋</h1>
 
         {/* Typewriter effect */}
         <div className="h-10 md:h-12 overflow-hidden">
@@ -32,13 +32,17 @@ const HomeSection = () => {
 
         {/* Intro paragraph */}
         <p className="text-lg text-gray-700 dark:text-gray-300 max-w-xl">
-          I'm a passionate developer who loves building web applications,
+          I&apos;m a passionate developer who loves building web applications,
           exploring embedded systems, and solving challenging problems.
         </p>
 
-        <button className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition">
-          Contact Me
-        </button>
+        <div className="pt-2">
+          <Link href="#contact">
+            <button className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition">
+              Contact Me
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Right Side */}
