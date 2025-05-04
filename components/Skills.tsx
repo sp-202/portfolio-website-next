@@ -1,42 +1,13 @@
-'use client'
+'use client';
 
 import { useEffect, useState } from 'react';
+import { useGithubStats } from '@/context/GithubStatsContext';
 import CountUp from 'react-countup';
 
-interface GithubStats {
-  publicRepos: number;
-  totalCommits: number;
-  followers: number;
-  languages: Record<string, number>;
-}
-
 const Skills = () => {
-  const [githubStats, setGithubStats] = useState<GithubStats>({
-    publicRepos: 0,
-    totalCommits: 0,
-    followers: 0,
-    languages: {},
-  });
-  const [loading, setLoading] = useState(true);
+  const { githubStats, loading } = useGithubStats();
   const [animateBars, setAnimateBars] = useState(false);
 
-  useEffect(() => {
-    const fetchGithubStats = async () => {
-      try {
-        const response = await fetch('/api/githubStats');
-        const data = await response.json();
-        setGithubStats(data);
-      } catch (error) {
-        console.error('Error fetching GitHub stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGithubStats();
-  }, []);
-
-  // Define programming languages to display (excluding C)
   const programmingLanguages = [
     'C++',
     'Java',
@@ -49,7 +20,6 @@ const Skills = () => {
     'Assembly',
   ];
 
-  // Filter languages and compute max lines for displayed languages only
   const filteredLanguages = Object.entries(githubStats.languages)
     .filter(([language]) => programmingLanguages.includes(language))
     .reduce((acc, [language, lines]) => {
@@ -58,9 +28,16 @@ const Skills = () => {
     }, {} as Record<string, number>);
 
   const languageValues = Object.values(filteredLanguages);
-  const maxLanguageLines = Math.max(...languageValues, 1); // Prevent division by zero
+  const maxLanguageLines = Math.max(...languageValues, 1);
 
-  // Skeleton loader component
+  // Animate after loading
+  useEffect(() => {
+    if (!loading) {
+      const timer = setTimeout(() => setAnimateBars(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
   const SkeletonLoader = () => (
     <div className="animate-pulse">
       <div className="flex space-x-8 mb-6">
@@ -90,65 +67,40 @@ const Skills = () => {
     </div>
   );
 
-  useEffect(() => {
-    if (!loading) {
-      // Trigger bar animation after a short delay when loading is complete
-      const timer = setTimeout(() => {
-        setAnimateBars(true);
-      }, 100); // Small delay to ensure smooth transition
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
-
   return (
-    <div className="p-6 max-w-screen-xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center">Skills</h1>
+    <div className="p-6 max-w-screen-xl mx-auto px-12">
+      <h1 className="text-4xl font-bold mb-6 text-center">Skills</h1>
 
       {loading ? (
         <SkeletonLoader />
       ) : (
         <>
-          {/* Repos & Commits */}
           <div className="flex space-x-8 mb-6">
             <div className="bg-gray-100 p-6 rounded-lg shadow-md w-1/2">
               <h3 className="text-xl font-semibold text-gray-800">Total Repos</h3>
               <p className="text-3xl font-bold text-blue-600">
-                <CountUp
-                  start={0}
-                  end={githubStats.publicRepos}
-                  duration={2.5}
-                  separator=","
-                  suffix="+"
-                />
+                <CountUp start={0} end={githubStats.publicRepos} duration={2.5} separator="," suffix="+" />
               </p>
             </div>
             <div className="bg-gray-100 p-6 rounded-lg shadow-md w-1/2">
               <h3 className="text-xl font-semibold text-gray-800">Total Commits</h3>
               <p className="text-3xl font-bold text-blue-600">
-                <CountUp
-                  start={0}
-                  end={githubStats.totalCommits}
-                  duration={2.5}
-                  separator=","
-                  suffix="+"
-                />
+                <CountUp start={0} end={githubStats.totalCommits} duration={2.5} separator="," suffix="+" />
               </p>
             </div>
           </div>
 
-          {/* Language Stats */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-800">Popular Languages</h3>
             {Object.entries(filteredLanguages).length > 0 ? (
               <div>
                 {Object.entries(filteredLanguages)
-                  .sort(([, linesA], [, linesB]) => linesB - linesA) // Sort by lines, descending
-                  .slice(0, 10) // Limit to top 10
+                  .sort(([, a], [, b]) => b - a)
+                  .slice(0, 10)
                   .map(([language, lines]) => (
                     <div key={language} className="mb-4">
                       <div className="flex justify-between items-center mb-2">
                         <p className="font-medium text-gray-700">{language}</p>
-                        {/* <p className="text-sm text-gray-500">{lines} lines</p> */}
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                         <div
