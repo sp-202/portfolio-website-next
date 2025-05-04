@@ -1,9 +1,9 @@
-// app/layout.tsx
 import { ThemeWrapper } from "./theme-wrapper";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 
 import "./globals.css";
+import { GithubStatsProvider } from "@/context/GithubStatsContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,12 +20,15 @@ export const metadata: Metadata = {
   description: "Portfolio app",
 };
 
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
-        <ThemeWrapper>{children}</ThemeWrapper>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <ThemeWrapper>
+          <GithubStatsProvider>
+            {children}
+          </GithubStatsProvider>
+        </ThemeWrapper>
       </body>
     </html>
   );
