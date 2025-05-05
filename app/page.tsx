@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import Skills from "@/components/Skills";
 import { FaChevronUp } from "react-icons/fa";
+import Timeline from "@/components/Education";
 
 export default function Page() {
   const [showTopBtn, setShowTopBtn] = useState(false);
@@ -29,6 +30,7 @@ export default function Page() {
       </section>
       <section id="about" className="py-20 max-w-screen-xl mx-auto px-10">
         <AboutSection />
+        <Timeline/>
       </section>
       <section id="skills" className="py-20 max-w-screen-xl mx-auto px-12">
         <Skills />
