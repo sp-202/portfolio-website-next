@@ -18,8 +18,7 @@ export default function Page() {
     const handleScroll = () => {
       setShowTopBtn(window.scrollY > 300);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll);return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
@@ -32,13 +31,13 @@ export default function Page() {
         <AboutSection />
         <Timeline/>
       </section>
-      <section id="skills" className="py-20 max-w-screen-xl mx-auto px-12">
+      <section id="skills" className="py-20 sm:px-10 max-w-screen-xl mx-auto px-12">
         <Skills />
       </section>
       <section id="projects" className="py-20 max-w-screen-xl mx-auto">
         <ProjectsSection />
       </section>
-      <section id="contact" className="min-h-screen py-20 max-w-screen-xl mx-auto">
+      <section id="contact" className="min-h-screen py-20 w-screen-xl mx-auto">
         <ContactSection />
       </section>
       <Footer />
