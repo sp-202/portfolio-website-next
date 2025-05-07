@@ -39,15 +39,15 @@ const ContactSection = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
+    <div className="max-w-5xl mx-auto py-12">
       <h2 className="text-5xl font-extrabold text-center text-gray-800 mb-3 tracking-wide">
         Contact Me
       </h2>
       <p className="text-center text-gray-600 mb-12 text-lg">Let&apos;s stay in touch!</p>
 
-      <div className="flex flex-col md:flex-row gap-10 items-center">
+      <div className="flex flex-col md:flex-row gap-10 items-center p-8">
         {/* Contact Info Section */}
-        <div className="md:w-1/2 space-y-6">
+        <div className="md:w-1/2 space-y-6 w-full lg:w-1/2">
           <div className="flex items-center p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
             <div className="w-12 h-12 rounded-full flex items-center justify-center mr-4 transform">
               <span className="text-blue-600 text-3xl">
@@ -106,8 +106,8 @@ const ContactSection = () => {
         </div>
 
         {/* Contact Form Section */}
-        <div className="md:w-1/2">
-          <div className="bg-white p-8 rounded-xl border-gray-100">
+        <div className="md:w-1/2 w-full lg:w-1/2">
+          <div className="bg-white py-8 rounded-xl border-gray-100">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
@@ -117,7 +117,7 @@ const ContactSection = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Name"
-                    className="w-full p-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 transition-all duration-300"
+                    className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 transition-all duration-300"
                     required
                   />
                 </div>
@@ -128,7 +128,7 @@ const ContactSection = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Email"
-                    className="w-full p-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 transition-all duration-300"
+                    className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 transition-all duration-300"
                     required
                   />
                 </div>
@@ -141,7 +141,7 @@ const ContactSection = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   placeholder="Subject"
-                  className="w-full p-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 transition-all duration-300"
+                  className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 transition-all duration-300"
                   required
                 />
               </div>
@@ -153,7 +153,7 @@ const ContactSection = () => {
                   onChange={handleChange}
                   placeholder="Message"
                   rows={5}
-                  className="w-full p-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 transition-all duration-300"
+                  className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 transition-all duration-300"
                   required
                 />
               </div>
