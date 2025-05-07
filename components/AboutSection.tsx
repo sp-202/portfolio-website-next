@@ -64,7 +64,7 @@ const AboutMe = () => {
 
             {/* Stats with shimmer animation */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 text-center">
-              <StatCard label="Years Experience" value={2} loading={loading} />
+              <StatCard label="Years Experience" value={1} loading={loading} />
               <StatCard label="Commits on GitHub" value={totalCommits} loading={loading} />
               <StatCard label="Repositories" value={publicRepos} loading={loading} />
               <StatCard label="Fullstack Projects" value={20} loading={loading} />
