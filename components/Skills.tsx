@@ -68,7 +68,7 @@ const Skills = () => {
   );
 
   return (
-    <div className="p-6 max-w-screen-xl mx-auto px-12">
+    <div className="p-6 max-w-screen-xl mx-auto lg:p-12">
       <h1 className="text-4xl font-bold mb-6 text-center">Skills</h1>
 
       {loading ? (
@@ -76,13 +76,13 @@ const Skills = () => {
       ) : (
         <>
           <div className="flex space-x-8 mb-6">
-            <div className="bg-gray-100 p-6 rounded-lg shadow-md w-1/2">
+            <div className="bg-gray-100 p-6 rounded-lg shadow-md w-1/2 text-center">
               <h3 className="text-xl font-semibold text-gray-800">Total Repos</h3>
               <p className="text-3xl font-bold text-blue-600">
                 <CountUp start={0} end={githubStats.publicRepos} duration={2.5} separator="," suffix="+" />
               </p>
             </div>
-            <div className="bg-gray-100 p-6 rounded-lg shadow-md w-1/2">
+            <div className="bg-gray-100 p-6 rounded-lg shadow-md w-1/2 text-center">
               <h3 className="text-xl font-semibold text-gray-800">Total Commits</h3>
               <p className="text-3xl font-bold text-blue-600">
                 <CountUp start={0} end={githubStats.totalCommits} duration={2.5} separator="," suffix="+" />
