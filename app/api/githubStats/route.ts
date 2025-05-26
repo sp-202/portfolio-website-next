@@ -1,7 +1,9 @@
 import { Octokit } from '@octokit/rest';
 import { NextResponse } from 'next/server';
+import { getCache, setCache } from '../cache'; // Import from cache.ts
 
-const username = 'sp-202'; // Replace with your GitHub username
+// Determine username from environment variable or fallback to 'sp-202'
+const username = process.env.GITHUB_USERNAME || 'sp-202';
 const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN as string;
 
 const octokit = new Octokit({ auth: token });
@@ -14,24 +16,6 @@ interface CacheData {
   languages: Record<string, number>;
 }
 
-// Simple in-memory cache with a TTL of 10 minutes (600,000ms)
-const cache: Record<string, { data: CacheData; timestamp: number }> = {};
-const CACHE_TTL = 0; // Cache for 10 minutes
-
-// Function to check cache and return data if available and not expired
-const getCache = (key: string): CacheData | null => {
-  const cached = cache[key];
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
-  }
-  return null;
-};
-
-// Function to set cache with the current timestamp
-const setCache = (key: string, data: CacheData): void => {
-  cache[key] = { data, timestamp: Date.now() };
-};
-
 // Define types for contributor and language data
 interface Contributor {
   login: string;
@@ -42,15 +26,78 @@ interface Languages {
   [key: string]: number;
 }
 
-export async function GET() {
-  const cacheKey = `githubStats_${username}`;
+// Define a type for the repository object (simplified)
+// Ideally, this would come from Octokit's types, e.g. Endpoints["GET /users/{username}/repos"]["response"]["data"][number]
+interface RepoType {
+  name: string;
+  // Add other properties if needed, or use a more specific Octokit type
+}
 
-  // Check if the data is already in cache
-  const cachedData = getCache(cacheKey);
-  if (cachedData) {
-    return NextResponse.json(cachedData);
+// Define a type for the output of processRepo
+interface ProcessRepoOutput {
+  commits: number;
+  languages: Record<string, number>;
+}
+
+async function processRepo(
+  repo: RepoType,
+  username: string,
+  octokit: Octokit
+): Promise<ProcessRepoOutput | null> {
+  try {
+    // Fetch contributors and languages for each repo in parallel
+    const [contributorsRes, languagesRes] = await Promise.all([
+      octokit.rest.repos
+        .listContributors({
+          owner: username, // Assuming username is the owner, adjust if owner can be different
+          repo: repo.name,
+        })
+        .catch((error: unknown) => {
+          if (error instanceof Error && error.message.includes('contributor list is too large')) {
+            console.warn(
+              `Skipping contributors for repo ${repo.name}: ${error.message}`
+            );
+            return { data: [] }; // Return empty contributors list to continue processing
+          }
+          throw error; // Rethrow other errors
+        }),
+      octokit.request('GET /repos/{owner}/{repo}/languages', {
+        owner: username, // Assuming username is the owner
+        repo: repo.name,
+      }),
+    ]);
+
+    let repoCommits = 0;
+    const repoLanguages: Record<string, number> = {};
+
+    const contributors = contributorsRes.data as Contributor[];
+    const self = Array.isArray(contributors)
+      ? contributors.find((c) => c.login === username)
+      : null;
+
+    if (self) {
+      repoCommits = self.contributions;
+    } else {
+      console.warn(`No contributions found for ${username} in repo ${repo.name}`);
+    }
+
+    const languagesData = languagesRes.data as Languages;
+    for (const [language, lines] of Object.entries(languagesData)) {
+      repoLanguages[language] = (repoLanguages[language] || 0) + lines;
+    }
+
+    return { commits: repoCommits, languages: repoLanguages };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(`Error processing repo ${repo.name}: ${error.message}`);
+    } else {
+      console.error(`Error processing repo ${repo.name}: Unknown error`);
+    }
+    return null; // Return null if processing this specific repo fails
   }
+}
 
+async function fetchGitHubStats(username: string, octokit: Octokit): Promise<CacheData> {
   try {
     // Get user details
     const { data: user } = await octokit.rest.users.getByUsername({ username });
@@ -62,87 +109,70 @@ export async function GET() {
       per_page: 100,
     });
 
+    // Parallelize fetching and processing repo data
+    const repoProcessingPromises = repos.map(repo =>
+      processRepo(repo as RepoType, username, octokit)
+    );
+
+    const processedRepoResults = await Promise.all(repoProcessingPromises);
+
     let totalCommits = 0;
-    const languageStats: Record<string, number> = {};
+    const aggregateLanguageStats: Record<string, number> = {};
 
-    // Parallelize fetching contributors and languages for all repos
-    const fetchRepoDataPromises = repos.map(async (repo) => {
-      try {
-        // Fetch contributors and languages for each repo in parallel
-        const [contributorsRes, languagesRes] = await Promise.all([
-          octokit.rest.repos
-            .listContributors({
-              owner: username,
-              repo: repo.name,
-            })
-            .catch((error: unknown) => {
-              if (error instanceof Error && error.message.includes('contributor list is too large')) {
-                console.warn(
-                  `Skipping contributors for repo ${repo.name}: ${error.message}`
-                );
-                return { data: [] }; // Return empty contributors list to continue processing
-              }
-              throw error; // Rethrow other errors
-            }),
-          octokit.request('GET /repos/{owner}/{repo}/languages', {
-            owner: username,
-            repo: repo.name,
-          }),
-        ]);
-
-        const contributors = contributorsRes.data as Contributor[];
-        const self = Array.isArray(contributors)
-          ? contributors.find((c) => c.login === username)
-          : null;
-
-        if (self) {
-          totalCommits += self.contributions;
-        } else {
-          console.warn(`No contributions found for ${username} in repo ${repo.name}`);
+    for (const result of processedRepoResults) {
+      if (result) { // Filter out null results (errors during individual repo processing)
+        totalCommits += result.commits;
+        for (const [language, lines] of Object.entries(result.languages)) {
+          aggregateLanguageStats[language] = (aggregateLanguageStats[language] || 0) + lines;
         }
-
-        const languages = languagesRes.data as Languages;
-
-        // Accumulate language-specific data
-        for (const [language, lines] of Object.entries(languages)) {
-          if (languageStats[language]) {
-            languageStats[language] += lines;
-          } else {
-            languageStats[language] = lines;
-          }
-        }
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          console.error(`Error processing repo ${repo.name}: ${error.message}`);
-        } else {
-          console.error(`Error processing repo ${repo.name}: Unknown error`);
-        }
-        // Continue processing other repos instead of failing
       }
-    });
-
-    // Wait for all promises to resolve
-    await Promise.all(fetchRepoDataPromises);
+    }
 
     // Prepare response data
     const responseData: CacheData = {
       publicRepos: user.public_repos,
       totalCommits,
       followers: user.followers,
-      languages: languageStats, // Include all languages without filtering
+      languages: aggregateLanguageStats, // Use aggregated stats
     };
+    return responseData;
+  } catch (error) {
+    // Log and re-throw the error to be handled by the GET function's catch block
+    if (error instanceof Error) {
+      console.error('GitHub API error in fetchGitHubStats:', error.message);
+    } else {
+      console.error('Unknown error in fetchGitHubStats:', error);
+    }
+    throw error; // Re-throw the error
+  }
+}
+
+export async function GET() {
+  const cacheKey = `githubStats_${username}`;
+
+  // Check if the data is already in cache
+  const cachedData = getCache<CacheData>(cacheKey); // Use generic getCache
+  if (cachedData) {
+    return NextResponse.json(cachedData);
+  }
+
+  try {
+    const responseData = await fetchGitHubStats(username, octokit);
 
     // Cache the response data
-    setCache(cacheKey, responseData);
+    setCache<CacheData>(cacheKey, responseData); // Use generic setCache
 
     // Return the response data
     return NextResponse.json(responseData);
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('GitHub API error:', error.message);
-      return NextResponse.json({ error: 'Failed to fetch GitHub data' }, { status: 500 });
-    }
-    console.error('GitHub API error: Unknown error');
-    return NextResponse.json({ error: 'Failed to fetch GitHub data' }, { status: 500 });
+    // This will catch errors from fetchGitHubStats or setCache
+    console.error('Error in GET handler:', error); // Log the error object for better inspection
+    return NextResponse.json(
+      {
+        error: 'Failed to retrieve GitHub statistics',
+        details: error instanceof Error ? error.message : String(error), // Use String(error) for unknown
+      },
+      { status: 500 }
+    );
   }
 }
