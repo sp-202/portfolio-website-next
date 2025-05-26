@@ -67,7 +67,7 @@ const AboutMe = () => {
               <StatCard label="Years Experience" value={1} loading={loading} />
               <StatCard label="Commits on GitHub" value={totalCommits} loading={loading} />
               <StatCard label="Repositories" value={publicRepos} loading={loading} />
-              <StatCard label="Fullstack Projects" value={20} loading={loading} />
+              <StatCard label="Fullstack Projects" value={10} loading={loading} />
             </div>
 
             {/* Download CV */}
