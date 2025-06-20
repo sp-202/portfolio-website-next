@@ -16,9 +16,8 @@ const HomeSection = () => {
               words={[
                 "Backend Developer",
                 "Frontend Developer",
-                "AI/ML Enthusiast",
                 "Android Developer",
-                "Embedded Systems Builder",
+                "AI/ML Enthusiast",
               ]}
               loop={0} // 0 for infinite
               cursor={false}
@@ -33,7 +32,7 @@ const HomeSection = () => {
         {/* Intro paragraph */}
         <p className="text-lg text-gray-700 dark:text-gray-300 max-w-xl">
           I&apos;m a passionate developer who loves building web applications,
-          exploring embedded systems, and solving challenging problems.
+          exploring automations and CI/CD deployments, and solving challenging problems.
         </p>
 
         <div className="pt-2">
@@ -48,7 +47,7 @@ const HomeSection = () => {
       {/* Right Side */}
       <div className="mt-10 md:mt-0 md:ml-12">
         <Image
-          src="/coding.svg" // replace with your actual image
+          src="/images/profile_image.jpeg" // replace with your actual image
           alt="Coding Illustration"
           width={400}
           height={400}
