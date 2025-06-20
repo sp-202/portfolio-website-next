@@ -42,9 +42,9 @@ const AboutMe = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left: Image */}
           <div className="flex justify-center">
-            <div className="rounded-2xl bg-indigo-500 p-2">
+            <div className="rounded-2x p-2">
               <Image
-                src="/your-photo.png"
+                src="/images/profile_image.jpeg"
                 alt="Profile"
                 width={300}
                 height={300}
@@ -56,10 +56,11 @@ const AboutMe = () => {
           {/* Right: Text + Stats + CV */}
           <div>
             <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-              I&apos;m <span className="font-semibold">Subhodeep Pal</span>, a Mechanical Engineering B.Tech graduate from NIT Durgapur.
-              Over the past year, I have been extensively working on projects based on <strong>React</strong> and <strong>Next.js</strong> using <strong>TypeScript</strong>.
-              I also have a strong knowledge of <strong>Spring Boot</strong> and backend development.
-              I believe in the power of open source and love contributing to the community. Currently, I&apos;m focused on enhancing my <strong>Data Structures and Algorithms</strong> skills.
+              I&apos;m <span className="font-semibold">Subhodeep Pal</span>, a B.Tech graduate in Mechanical Engineering from NIT Durgapur.
+              I specialize in full-stack development with hands-on experience building modern web applications using <strong>React</strong>, <strong>Next.js</strong>, and <strong>TypeScript</strong> on the frontend, and <strong>Node.js</strong>, <strong>Express</strong>, and <strong>Spring Boot</strong> on the backend.
+              I enjoy architecting scalable backend systems and have worked extensively on server-side development.
+              Additionally, I have experience in <strong>Android development</strong> using <strong>Java</strong>, enabling me to build cross-platform solutions.
+              I’m passionate about open source, love contributing to the developer community, and am currently focused on sharpening my skills in <strong>Data Structures and Algorithms</strong> to become a more efficient problem solver.
             </p>
 
             {/* Stats with shimmer animation */}
@@ -72,7 +73,7 @@ const AboutMe = () => {
 
             {/* Download CV */}
             <Link
-              href="/subhodeep_pal_resume.pdf"
+              href="/Subhodeep_pal_Resume.pdf"
               download
               className="inline-block px-6 py-3 bg-indigo-500 text-slate-50 rounded-xl hover:bg-indigo-800 transition"
             >
