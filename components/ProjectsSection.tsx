@@ -42,7 +42,7 @@ const ProjectsSection = () => {
           </p>
           <div className="mt-auto">
             <a
-              href="https://github.com/sp-202/Next-ChatApp"
+              href="https://github.com/sp-202/Chat-App-2.0"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200"
